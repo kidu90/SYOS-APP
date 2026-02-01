@@ -1,0 +1,8 @@
+com/syos/application/service/BillNumberGeneratorTest.class
+com/syos/application/builder/BillBuilderTest.class
+com/syos/application/strategy/DiscountStrategyTest.class
+com/syos/application/strategy/StockSelectionStrategyTest.class
+com/syos/domain/entity/ProductTest.class
+com/syos/domain/entity/BillTest.class
+com/syos/domain/entity/StockBatchTest.class
+com/syos/domain/valueobject/MoneyTest.class
