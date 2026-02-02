@@ -1,19 +1,25 @@
 package com.syos.domain.entity;
 
-import com.syos.domain.valueobject.BatchNumber;
-import com.syos.domain.valueobject.ProductId;
 import java.time.LocalDate;
 import java.util.Objects;
+
+import com.syos.domain.valueobject.BatchNumber;
+import com.syos.domain.valueobject.InventoryChannel;
+import com.syos.domain.valueobject.ProductId;
 
 public class StockBatch {
     private final BatchNumber batchNumber;
     private final ProductId productId;
+    private final InventoryChannel inventoryChannel;
     private int quantity;
     private final LocalDate expiryDate;
     private final LocalDate receivedDate;
 
-    public StockBatch(BatchNumber batchNumber, ProductId productId, int quantity,
+    public StockBatch(BatchNumber batchNumber, ProductId productId, InventoryChannel inventoryChannel, int quantity,
                       LocalDate expiryDate, LocalDate receivedDate) {
+        if (inventoryChannel == null) {
+            throw new IllegalArgumentException("Inventory channel cannot be null");
+        }
         if (quantity < 0) {
             throw new IllegalArgumentException("Quantity cannot be negative");
         }
@@ -26,6 +32,7 @@ public class StockBatch {
 
         this.batchNumber = batchNumber;
         this.productId = productId;
+        this.inventoryChannel = inventoryChannel;
         this.quantity = quantity;
         this.expiryDate = expiryDate;
         this.receivedDate = receivedDate;
@@ -66,6 +73,10 @@ public class StockBatch {
 
     public ProductId getProductId() {
         return productId;
+    }
+
+    public InventoryChannel getInventoryChannel() {
+        return inventoryChannel;
     }
 
     public int getQuantity() {

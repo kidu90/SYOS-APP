@@ -1,7 +1,8 @@
 package com.syos.application.report;
 
-public abstract class ReportGenerator {
+public abstract class ReportGenerator implements IReportGenerator {
     
+    @Override
     public final String generateReport() {
         StringBuilder report = new StringBuilder();
         report.append(getReportHeader());

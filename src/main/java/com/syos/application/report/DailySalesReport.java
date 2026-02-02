@@ -1,17 +1,18 @@
 package com.syos.application.report;
 
-import com.syos.domain.entity.Bill;
-import com.syos.domain.repository.BillRepository;
-import com.syos.domain.valueobject.Money;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import com.syos.domain.entity.Bill;
+import com.syos.domain.repository.BillReadRepository;
+import com.syos.domain.valueobject.Money;
+
 public class DailySalesReport extends ReportGenerator {
-    private final BillRepository billRepository;
+    private final BillReadRepository billRepository;
     private final LocalDate date;
 
-    public DailySalesReport(BillRepository billRepository, LocalDate date) {
+    public DailySalesReport(BillReadRepository billRepository, LocalDate date) {
         this.billRepository = billRepository;
         this.date = date;
     }

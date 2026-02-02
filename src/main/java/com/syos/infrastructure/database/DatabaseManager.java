@@ -28,6 +28,10 @@ public class DatabaseManager {
         return instance;
     }
 
+    public static synchronized void resetInstance() {
+        instance = null;
+    }
+
     public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(databaseUrl);
     }
@@ -47,11 +51,18 @@ public class DatabaseManager {
             stmt.execute("CREATE TABLE IF NOT EXISTS stock_batches (" +
                 "batch_number TEXT PRIMARY KEY," +
                 "product_id TEXT NOT NULL," +
+                "inventory_channel TEXT NOT NULL DEFAULT 'STORE'," +
                 "quantity INTEGER NOT NULL," +
                 "expiry_date TEXT NOT NULL," +
                 "received_date TEXT NOT NULL," +
                 "FOREIGN KEY (product_id) REFERENCES products(id)" +
                 ")");
+
+            try {
+                stmt.execute("ALTER TABLE stock_batches ADD COLUMN inventory_channel TEXT NOT NULL DEFAULT 'STORE'");
+            } catch (SQLException ignored) {
+                // Column already exists
+            }
 
             stmt.execute("CREATE TABLE IF NOT EXISTS bills (" +
                 "bill_number TEXT PRIMARY KEY," +

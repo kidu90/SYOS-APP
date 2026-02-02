@@ -1,12 +1,12 @@
 package com.syos.application.usecase;
 
 import com.syos.domain.entity.Product;
-import com.syos.domain.repository.ProductRepository;
+import com.syos.domain.repository.ProductWriteRepository;
 
 public class AddProductUseCase {
-    private final ProductRepository productRepository;
+    private final ProductWriteRepository productRepository;
 
-    public AddProductUseCase(ProductRepository productRepository) {
+    public AddProductUseCase(ProductWriteRepository productRepository) {
         this.productRepository = productRepository;
     }
 

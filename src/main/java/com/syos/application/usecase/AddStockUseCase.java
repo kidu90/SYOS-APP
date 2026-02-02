@@ -1,12 +1,12 @@
 package com.syos.application.usecase;
 
 import com.syos.domain.entity.StockBatch;
-import com.syos.domain.repository.StockRepository;
+import com.syos.domain.repository.StockWriteRepository;
 
 public class AddStockUseCase {
-    private final StockRepository stockRepository;
+    private final StockWriteRepository stockRepository;
 
-    public AddStockUseCase(StockRepository stockRepository) {
+    public AddStockUseCase(StockWriteRepository stockRepository) {
         this.stockRepository = stockRepository;
     }
 

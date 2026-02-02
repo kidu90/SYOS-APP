@@ -1,28 +1,30 @@
 package com.syos.application.usecase;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.syos.application.builder.BillBuilder;
-import com.syos.application.service.BillNumberGenerator;
+import com.syos.application.service.BillCalculationService;
+import com.syos.application.service.BillNumberService;
+import com.syos.application.service.InventoryManager;
 import com.syos.application.strategy.DiscountStrategy;
 import com.syos.application.strategy.StockSelectionStrategy;
 import com.syos.domain.entity.Bill;
 import com.syos.domain.entity.BillItem;
 import com.syos.domain.entity.Product;
 import com.syos.domain.entity.StockBatch;
-import com.syos.domain.repository.BillRepository;
-import com.syos.domain.repository.ProductRepository;
-import com.syos.domain.repository.StockRepository;
-import com.syos.domain.valueobject.Money;
+import com.syos.domain.repository.BillWriteRepository;
+import com.syos.domain.repository.ProductReadRepository;
+import com.syos.domain.valueobject.InventoryChannel;
 import com.syos.domain.valueobject.ProductId;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class CheckoutCommand implements Command {
-    private final ProductRepository productRepository;
-    private final StockRepository stockRepository;
-    private final BillRepository billRepository;
+    private final ProductReadRepository productRepository;
+    private final InventoryManager inventoryManager;
+    private final BillWriteRepository billRepository;
+    private final BillNumberService billNumberService;
+    private final BillCalculationService billCalculationService;
     private final StockSelectionStrategy stockSelectionStrategy;
     private final DiscountStrategy discountStrategy;
     private final Map<String, Integer> cartItems;
@@ -31,9 +33,11 @@ public class CheckoutCommand implements Command {
     private final String customerAddress;
     private Bill generatedBill;
 
-    public CheckoutCommand(ProductRepository productRepository,
-                          StockRepository stockRepository,
-                          BillRepository billRepository,
+    public CheckoutCommand(ProductReadRepository productRepository,
+                          InventoryManager inventoryManager,
+                          BillWriteRepository billRepository,
+                          BillNumberService billNumberService,
+                          BillCalculationService billCalculationService,
                           StockSelectionStrategy stockSelectionStrategy,
                           DiscountStrategy discountStrategy,
                           Map<String, Integer> cartItems,
@@ -41,8 +45,10 @@ public class CheckoutCommand implements Command {
                           String customerName,
                           String customerAddress) {
         this.productRepository = productRepository;
-        this.stockRepository = stockRepository;
+        this.inventoryManager = inventoryManager;
         this.billRepository = billRepository;
+        this.billNumberService = billNumberService;
+        this.billCalculationService = billCalculationService;
         this.stockSelectionStrategy = stockSelectionStrategy;
         this.discountStrategy = discountStrategy;
         this.cartItems = new HashMap<>(cartItems);
@@ -54,7 +60,7 @@ public class CheckoutCommand implements Command {
     @Override
     public void execute() {
         String prefix = saleType == Bill.SaleType.ONLINE ? "ONL" : "POS";
-        String billNumber = BillNumberGenerator.getInstance().generateBillNumber(prefix);
+        String billNumber = billNumberService.generateBillNumber(prefix);
 
         BillBuilder builder = new BillBuilder()
             .withBillNumber(billNumber)
@@ -74,7 +80,8 @@ public class CheckoutCommand implements Command {
             Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productIdStr));
 
-            List<StockBatch> availableBatches = stockRepository.findByProductId(productId);
+            InventoryChannel channel = saleType == Bill.SaleType.ONLINE ? InventoryChannel.ONLINE : InventoryChannel.STORE;
+            List<StockBatch> availableBatches = inventoryManager.getAvailableBatches(productId, channel);
             List<StockBatch> selectedBatches = stockSelectionStrategy.selectBatches(availableBatches, quantity);
 
             int remainingQuantity = quantity;
@@ -91,14 +98,13 @@ public class CheckoutCommand implements Command {
                 
                 bill.addItem(item);
                 batch.reduceQuantity(quantityToTake);
-                stockRepository.update(batch);
+                inventoryManager.updateStock(batch);
                 
                 remainingQuantity -= quantityToTake;
             }
         }
 
-        Money discount = discountStrategy.calculateDiscount(bill);
-        bill.applyDiscount(discount);
+        billCalculationService.applyDiscounts(bill, discountStrategy);
 
         billRepository.save(bill);
         this.generatedBill = bill;

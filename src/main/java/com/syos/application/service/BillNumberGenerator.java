@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class BillNumberGenerator {
+public class BillNumberGenerator implements BillNumberService {
     private static BillNumberGenerator instance;
     private final AtomicLong counter;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -20,6 +20,7 @@ public class BillNumberGenerator {
         return instance;
     }
 
+    @Override
     public String generateBillNumber(String prefix) {
         String date = LocalDateTime.now().format(DATE_FORMAT);
         long sequence = counter.getAndIncrement();

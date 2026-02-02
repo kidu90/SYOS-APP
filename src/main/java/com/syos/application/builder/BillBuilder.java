@@ -1,21 +1,19 @@
 package com.syos.application.builder;
 
-import com.syos.domain.entity.Bill;
-import com.syos.domain.entity.BillItem;
-import com.syos.domain.valueobject.BillNumber;
-import com.syos.domain.valueobject.Money;
-
 import java.time.LocalDateTime;
 
+import com.syos.domain.entity.Bill;
+import com.syos.domain.valueobject.BillNumber;
+
 public class BillBuilder {
-    private BillNumber billNumber;
+    private String billNumber;
     private LocalDateTime timestamp;
     private Bill.SaleType saleType;
     private String customerName;
     private String customerAddress;
 
     public BillBuilder withBillNumber(String billNumber) {
-        this.billNumber = new BillNumber(billNumber);
+        this.billNumber = billNumber;
         return this;
     }
 
@@ -52,7 +50,7 @@ public class BillBuilder {
             throw new IllegalStateException("Sale type is required");
         }
 
-        Bill bill = new Bill(billNumber, timestamp, saleType);
+        Bill bill = new Bill(new BillNumber(billNumber), timestamp, saleType);
         if (saleType == Bill.SaleType.ONLINE && customerName != null) {
             bill.setCustomerDetails(customerName, customerAddress);
         }
