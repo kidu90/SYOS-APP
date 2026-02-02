@@ -1,5 +1,14 @@
 package com.syos.unit.application.service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,7 +49,8 @@ class BillNumberGeneratorTest {
 
         String billNumber = generator.generateBillNumber("POS");
 
-        assertTrue(billNumber.contains("20260201"));
+        String expectedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        assertTrue(billNumber.contains(expectedDate));
     }
 
     @Test
@@ -60,5 +70,41 @@ class BillNumberGeneratorTest {
         BillNumberGenerator instance2 = BillNumberGenerator.getInstance();
 
         assertSame(instance1, instance2);
+    }
+
+    @Test
+    void shouldGenerateUniqueBillNumbersConcurrently() throws InterruptedException {
+        BillNumberGenerator generator = BillNumberGenerator.getInstance();
+
+        int threads = 10;
+        int perThread = 200;
+        int total = threads * perThread;
+
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threads);
+        Set<String> results = ConcurrentHashMap.newKeySet();
+
+        for (int t = 0; t < threads; t++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+                    for (int i = 0; i < perThread; i++) {
+                        results.add(generator.generateBillNumber("POS"));
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        startLatch.countDown();
+        boolean finished = doneLatch.await(10, TimeUnit.SECONDS);
+        executor.shutdownNow();
+
+        assertTrue(finished, "Concurrent generation did not finish in time");
+        assertTrue(results.size() == total, "Duplicate bill numbers detected under concurrency");
     }
 }

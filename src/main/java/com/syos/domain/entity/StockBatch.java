@@ -38,7 +38,7 @@ public class StockBatch {
         this.receivedDate = receivedDate;
     }
 
-    public void reduceQuantity(int amount) {
+    public synchronized void reduceQuantity(int amount) {
         if (amount < 0) {
             throw new IllegalArgumentException("Amount to reduce cannot be negative");
         }
@@ -48,7 +48,7 @@ public class StockBatch {
         this.quantity -= amount;
     }
 
-    public void addQuantity(int amount) {
+    public synchronized void addQuantity(int amount) {
         if (amount < 0) {
             throw new IllegalArgumentException("Amount to add cannot be negative");
         }
@@ -63,7 +63,7 @@ public class StockBatch {
         return LocalDate.now().plusDays(daysThreshold).isAfter(expiryDate) && !isExpired();
     }
 
-    public boolean hasStock() {
+    public synchronized boolean hasStock() {
         return quantity > 0;
     }
 
@@ -79,7 +79,7 @@ public class StockBatch {
         return inventoryChannel;
     }
 
-    public int getQuantity() {
+    public synchronized int getQuantity() {
         return quantity;
     }
 

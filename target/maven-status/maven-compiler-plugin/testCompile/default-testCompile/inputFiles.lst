@@ -6,5 +6,6 @@
 /Users/masha/Desktop/SYOS_POS/src/test/java/com/syos/unit/domain/entity/BillTest.java
 /Users/masha/Desktop/SYOS_POS/src/test/java/com/syos/unit/application/strategy/StockSelectionStrategyTest.java
 /Users/masha/Desktop/SYOS_POS/src/test/java/com/syos/unit/domain/valueobject/MoneyTest.java
+/Users/masha/Desktop/SYOS_POS/src/test/java/com/syos/unit/domain/entity/StockBatchConcurrencyTest.java
 /Users/masha/Desktop/SYOS_POS/src/test/java/com/syos/unit/application/report/StockStatusReportTest.java
 /Users/masha/Desktop/SYOS_POS/src/test/java/com/syos/unit/application/builder/BillBuilderTest.java
