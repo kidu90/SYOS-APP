@@ -399,6 +399,72 @@ The application includes two pre-configured scenarios:
 
 Both scenarios demonstrate:
 
+---
+
+## Swing GUI
+
+The console UI has been replaced by a Java Swing GUI under `com.syos.presentation.gui`.
+
+### What changed
+
+- Authentication is now backed by SQLite via a `users` table.
+- The dashboard shows the logged-in user's full name in the header.
+- In-store and online transaction screens preserve the original console rules and discounts.
+- Product browsing and reports now run in modal Swing dialogs.
+
+### Run the application
+
+```bash
+mvn clean test
+mvn exec:java
+```
+
+`mvn exec:java` launches the composition root in `com.syos.presentation.console.SYOSApplication`, which initializes sample data and opens the Swing GUI.
+
+### Database changes
+
+- A new `users` table is created automatically on startup.
+- Passwords remain plain text to match the original console behavior.
+
+---
+
+## Client-Server (Assignment 2) Changes
+
+The application has been refactored into a multi-tier client-server setup:
+
+- **Server**: application + domain + infrastructure layers, exposes HTTP endpoints on port 8080.
+- **Client**: Swing GUI (presentation layer only) that communicates with the server.
+- **Database**: existing SQLite file `syos.db` remains the persistence tier.
+
+### Run Server
+
+Build and start the server (from project root):
+
+```bash
+mvn -DskipTests package
+mvn exec:java -Dexec.mainClass=com.syos.server.SYOSHttpServer
+```
+
+Or run directly from the built JAR (classpath must include dependencies):
+
+```bash
+java -cp target/syos-pos-1.0.0.jar com.syos.server.SYOSHttpServer
+```
+
+### Run Client (Swing GUI)
+
+Start the Swing client (presentation-only):
+
+```bash
+mvn exec:java
+```
+
+The client will connect to the server at `http://localhost:8080` and expose product listing, a simple in-store checkout shortcut, and report retrieval.
+
+### Concurrency
+
+The server uses a `ThreadPoolExecutor` with a bounded `BlockingQueue` to handle multiple simultaneous client connections.
+
 - Stock reduction from appropriate batches
 - Discount strategy application
 - Bill generation with proper formatting

@@ -88,6 +88,14 @@ public class DatabaseManager {
                 "FOREIGN KEY (bill_number) REFERENCES bills(bill_number)" +
                 ")");
 
+            stmt.execute("CREATE TABLE IF NOT EXISTS users (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "full_name TEXT NOT NULL," +
+                "username TEXT NOT NULL UNIQUE," +
+                "password TEXT NOT NULL," +
+                "address TEXT NOT NULL" +
+                ")");
+
         } catch (SQLException e) {
             throw new RuntimeException("Failed to initialize database", e);
         }
@@ -100,6 +108,7 @@ public class DatabaseManager {
             stmt.execute("DROP TABLE IF EXISTS bills");
             stmt.execute("DROP TABLE IF EXISTS stock_batches");
             stmt.execute("DROP TABLE IF EXISTS products");
+            stmt.execute("DROP TABLE IF EXISTS users");
             initializeDatabase();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to reset database", e);

@@ -76,31 +76,34 @@ public class CheckoutCommand implements Command {
             String productIdStr = entry.getKey();
             int quantity = entry.getValue();
 
-            ProductId productId = new ProductId(productIdStr);
-            Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productIdStr));
+            // synchronize per-product to avoid lost-update race conditions
+            synchronized (com.syos.application.service.ProductLockManager.getLock(productIdStr)) {
+                ProductId productId = new ProductId(productIdStr);
+                Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productIdStr));
 
-            InventoryChannel channel = saleType == Bill.SaleType.ONLINE ? InventoryChannel.ONLINE : InventoryChannel.STORE;
-            List<StockBatch> availableBatches = inventoryManager.getAvailableBatches(productId, channel);
-            List<StockBatch> selectedBatches = stockSelectionStrategy.selectBatches(availableBatches, quantity);
+                InventoryChannel channel = saleType == Bill.SaleType.ONLINE ? InventoryChannel.ONLINE : InventoryChannel.STORE;
+                List<StockBatch> availableBatches = inventoryManager.getAvailableBatches(productId, channel);
+                List<StockBatch> selectedBatches = stockSelectionStrategy.selectBatches(availableBatches, quantity);
 
-            int remainingQuantity = quantity;
-            for (StockBatch batch : selectedBatches) {
-                int quantityToTake = Math.min(remainingQuantity, batch.getQuantity());
-                
-                BillItem item = new BillItem(
-                    productId,
-                    product.getName(),
-                    quantityToTake,
-                    product.getUnitPrice(),
-                    batch.getBatchNumber()
-                );
-                
-                bill.addItem(item);
-                batch.reduceQuantity(quantityToTake);
-                inventoryManager.updateStock(batch);
-                
-                remainingQuantity -= quantityToTake;
+                int remainingQuantity = quantity;
+                for (StockBatch batch : selectedBatches) {
+                    int quantityToTake = Math.min(remainingQuantity, batch.getQuantity());
+
+                    BillItem item = new BillItem(
+                        productId,
+                        product.getName(),
+                        quantityToTake,
+                        product.getUnitPrice(),
+                        batch.getBatchNumber()
+                    );
+
+                    bill.addItem(item);
+                    batch.reduceQuantity(quantityToTake);
+                    inventoryManager.updateStock(batch);
+
+                    remainingQuantity -= quantityToTake;
+                }
             }
         }
 
